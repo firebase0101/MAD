@@ -1,0 +1,258 @@
+Main Activity.java
+
+package com.example.andro;
+
+import android.os.Bundle;
+import android.app.Activity;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.Spinner;
+import android.widget.Toast;
+
+public class MainActivity extends Activity implements OnClickListener, OnItemSelectedListener {
+
+    EditText txt1, txt2, txt3, txt4, txt5;
+    Button b1, b2;
+    RadioGroup rg;
+    RadioButton r;
+    Spinner sp;
+    String dept;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        txt1 = (EditText) findViewById(R.id.txtRegNo);
+        txt2 = (EditText) findViewById(R.id.txtName);
+        txt3 = (EditText) findViewById(R.id.txt10th);
+        txt4 = (EditText) findViewById(R.id.txt12th);
+        txt5 = (EditText) findViewById(R.id.txtug);
+
+        b1 = (Button) findViewById(R.id.btnSubmit);
+        b2 = (Button) findViewById(R.id.btnClear);
+        b1.setOnClickListener(this);
+        b2.setOnClickListener(this);
+
+        rg = (RadioGroup) findViewById(R.id.radioGroup);
+        sp = (Spinner) findViewById(R.id.sprDepts);
+        sp.setOnItemSelectedListener(this);
+    }
+
+    @Override
+    public void onClick(View arg0) {
+        databasehandler db = new databasehandler(this);
+        switch (arg0.getId()) {
+            case R.id.btnSubmit:
+                int reg = Integer.parseInt(txt1.getText().toString());
+                String n = txt2.getText().toString();
+                int rid = rg.getCheckedRadioButtonId();
+                r = (RadioButton) findViewById(rid);
+                String gen = r.getText().toString();
+                float ten = Float.parseFloat(txt3.getText().toString());
+                float twele = Float.parseFloat(txt4.getText().toString());
+                float ug = Float.parseFloat(txt5.getText().toString());
+                Toast.makeText(getApplicationContext(), "The Values are:\n Reg.no:" + reg + "\nName:" + n
+                        + "\nGender:" + gen + "\nDepartment:" + dept + "\n10th Mark:" + ten + "\n12th Mark:"
+                        + twele + "\nUG Mark:" + ug, Toast.LENGTH_LONG).show();
+                db.insertEntry(reg, n, gen, dept, ten, twele, ug);
+                Toast.makeText(getApplicationContext(), "Record inserted successfully...", Toast.LENGTH_LONG).show();
+                txt1.setText("");
+                txt2.setText("");
+                txt3.setText("");
+                txt4.setText("");
+                txt5.setText("");
+                break;
+            case R.id.btnClear:
+                txt1.setText("");
+                txt2.setText("");
+                txt3.setText("");
+                txt4.setText("");
+                txt5.setText("");
+                break;
+        }
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
+        dept = sp.getSelectedItem().toString();
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> arg0) {
+    }
+}
+Databasehandler.java
+package com.example.andro;
+
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+
+public class databasehandler extends SQLiteOpenHelper {
+    private static final int DATABASE_VERSION = 1;
+    private static final String DATABASE_NAME = "Placement";
+    private static final String TABLE_DETAILS = "detail";
+    private static final String KEY_ID = "regno";
+    private static final String KEY_NAME = "name";
+    private static final String KEY_GENDER = "gender";
+    private static final String KEY_DEPT = "dept";
+    private static final String KEY_10TH = "tenthmark";
+    private static final String KEY_12TH = "twlvethmark"; // Corrected typo
+    private static final String KEY_UG = "ugmark";
+
+    public databasehandler(Context context) {
+        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    }
+
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        String cQuery = "CREATE TABLE " + TABLE_DETAILS + "("
+                + KEY_ID + " INTEGER PRIMARY KEY, "
+                + KEY_NAME + " TEXT, "
+                + KEY_GENDER + " TEXT, "
+                + KEY_DEPT + " TEXT, "
+                + KEY_10TH + " REAL, "
+                + KEY_12TH + " REAL, " // Corrected typo
+                + KEY_UG + " REAL " + ")";
+        db.execSQL(cQuery);
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_DETAILS);
+        onCreate(db);
+    }
+
+    public void insertEntry(int reg, String name, String gender, String dept, float tenmark, float twelvemark, float ugmark) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(KEY_ID, reg);
+        values.put(KEY_NAME, name);
+        values.put(KEY_GENDER, gender);
+        values.put(KEY_DEPT, dept);
+        values.put(KEY_10TH, tenmark);
+        values.put(KEY_12TH, twelvemark); // Corrected variable name
+        values.put(KEY_UG, ugmark);
+        db.insert(TABLE_DETAILS, null, values);
+        db.close();
+    }
+}
+Activity_main.xml
+
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <EditText
+        android:id="@+id/txtRegNo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter Register No"
+        android:layout_marginBottom="16dp"/>
+
+    <EditText
+        android:id="@+id/txtName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter Name"
+        android:layout_below="@id/txtRegNo"
+        android:layout_marginBottom="16dp"/>
+
+    <RadioGroup
+        android:id="@+id/radioGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_below="@id/txtName"
+        android:layout_marginBottom="16dp">
+
+        <RadioButton
+            android:id="@+id/radioMale"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Male"
+            android:checked="true"/>
+
+        <RadioButton
+            android:id="@+id/radioFemale"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Female"/>
+    </RadioGroup>
+
+    <Spinner
+        android:id="@+id/sprDepts"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/radioGroup"
+        android:layout_marginBottom="16dp"/>
+
+    <EditText
+        android:id="@+id/txt10th"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter 10th Mark"
+        android:layout_below="@id/sprDepts"
+        android:layout_marginBottom="16dp"/>
+
+    <EditText
+        android:id="@+id/txt12th"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter 12th Mark"
+        android:layout_below="@id/txt10th"
+        android:layout_marginBottom="16dp"/>
+
+    <EditText
+        android:id="@+id/txtug"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter UG Mark"
+        android:layout_below="@id/txt12th"
+        android:layout_marginBottom="16dp"/>
+
+    <Button
+        android:id="@+id/btnSubmit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Submit"
+        android:layout_below="@id/txtug"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="16dp"/>
+
+    <Button
+        android:id="@+id/btnClear"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Clear"
+        android:layout_below="@id/btnSubmit"
+        android:layout_centerHorizontal="true"/>
+</RelativeLayout>
+
+
+database cmd prompt
+
+Microsoft Windows [Version 10.0.19043.2130]
+(c) Microsoft Corporation. All rights reserved.
+
+C:\Users\USER\Downloads\adt-bundle-windows-x86-20130717\sdk\platform-tools>adb shell
+root@android:/ # cd data/data/com.example.data/databases
+cd data/data/com.example.data/databases
+root@android:/data/data/com.example.data/databases # sqlite3 Placement
+sqlite3 Placement
+SQLite version 3.7.11 2012-03-20 11:35:50
+Enter ".help" for instructions
+Enter SQL statements terminated with a ";"
+sqlite> select * from detail;
+select * from detail;
+41120147|Jk|Male||1222.0|2222.0|2222.0
